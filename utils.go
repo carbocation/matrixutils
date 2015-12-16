@@ -19,6 +19,36 @@ func positiveMod(n, k int) int {
 	return n % k
 }
 
+func RasterToCartesian(matrix *dsputils.Matrix) (*dsputils.Matrix, error) {
+	dims := matrix.Dimensions()
+	if len(dims) > 2 {
+		return nil, fmt.Errorf("CartesianToPolar expects 2 dimensions, found %d", len(dims))
+	}
+
+	// Clarify size of each dimension
+	lenX, lenY, _ := func() (int, int, int) {
+		// Reminder: matrices are matrix[y][x]
+		return dims[1], dims[0], int(math.Hypot(float64(dims[0]), float64(dims[1])))
+	}()
+
+	cartesianMatrix := dsputils.MakeEmptyMatrix([]int{lenY, lenX})
+
+	// Reminder: matrices are matrix[y][x]
+	for y := 0; y < lenY; y++ {
+		for x := 0; x < lenX; x++ {
+
+			cartesianX := x - lenX/2
+			cartesianY := lenY/2 - y
+
+			value := matrix.Value([]int{positiveMod(cartesianY, lenY), positiveMod(cartesianX, lenX)})
+
+			cartesianMatrix.SetValue(value, []int{y, x})
+		}
+	}
+
+	return cartesianMatrix, nil
+}
+
 // Using degrees, not radians
 func PolarToCartesian(matrix *dsputils.Matrix) (*dsputils.Matrix, error) {
 	dims := matrix.Dimensions()
