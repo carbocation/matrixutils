@@ -11,6 +11,15 @@ import (
 	"github.com/mjibson/go-dsp/dsputils"
 )
 
+func positiveMod(n, k int) int {
+	if n < 0 {
+		return k - ((-1 * n) % k)
+	}
+
+	return n % k
+}
+
+// Using degrees, not radians
 func PolarToCartesian(matrix *dsputils.Matrix) (*dsputils.Matrix, error) {
 	dims := matrix.Dimensions()
 	if len(dims) > 2 {
@@ -32,14 +41,7 @@ func PolarToCartesian(matrix *dsputils.Matrix) (*dsputils.Matrix, error) {
 			polarX := int(float64(cartesianX) * math.Cos(float64(cartesianY)*0.5*math.Pi/float64(lenY)))
 			polarY := int(float64(cartesianX) * math.Sin(float64(cartesianY)*0.5*math.Pi/float64(lenY)))
 
-			var value complex128
-			if polarX >= lenX || polarY >= lenY {
-				value = matrix.Value([]int{lenY - 1, lenX - 1})
-			} else if polarX < 0 || polarY < 0 {
-				value = matrix.Value([]int{0, 0})
-			} else {
-				value = matrix.Value([]int{polarY, polarX})
-			}
+			value := matrix.Value([]int{positiveMod(polarY, lenY), positiveMod(polarX, lenX)})
 
 			cartesianMatrix.SetValue(value, []int{cartesianY, cartesianX})
 		}
@@ -48,6 +50,7 @@ func PolarToCartesian(matrix *dsputils.Matrix) (*dsputils.Matrix, error) {
 	return cartesianMatrix, nil
 }
 
+// Using degrees, not radians
 func CartesianToPolar(matrix *dsputils.Matrix) (*dsputils.Matrix, error) {
 	dims := matrix.Dimensions()
 	if len(dims) > 2 {
@@ -69,14 +72,7 @@ func CartesianToPolar(matrix *dsputils.Matrix) (*dsputils.Matrix, error) {
 			cartesianX := int(math.Hypot(float64(polarX), float64(polarY)))
 			cartesianY := int(math.Atan2(float64(polarY), float64(polarX)) * 2.0 / math.Pi * float64(lenY))
 
-			var value complex128
-			if cartesianX >= lenX || cartesianY >= lenY {
-				value = matrix.Value([]int{lenY - 1, lenX - 1})
-			} else if cartesianX < 0 || cartesianY < 0 {
-				value = matrix.Value([]int{0, 0})
-			} else {
-				value = matrix.Value([]int{cartesianY, cartesianX})
-			}
+			value := matrix.Value([]int{positiveMod(cartesianY, lenY), positiveMod(cartesianX, lenX)})
 
 			polarMatrix.SetValue(value, []int{polarY, polarX})
 		}
